@@ -1,0 +1,45 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "SimpleLoadingScreenSettings.h"
+#include "SSimpleLoadingScreen.h"
+#include "Widgets/Layout/SDPIScaler.h"
+#include "SimpleLoadingScreenSubsystem.generated.h"
+
+UCLASS()
+class SIMPLELOADINGSCREEN_API USimpleLoadingScreenSubsystem : public UGameInstanceSubsystem
+{
+	GENERATED_BODY()
+
+protected:
+	TSharedPtr<SDPIScaler> Slot;
+	TSharedPtr<SSimpleLoadingScreen> LoadingScreen;
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+	void PreSetupLoadingScreen();
+	void SetupLoadingScreen(const FSimpleLoadingScreenAttributes& LoadingScreenSettings);
+
+public:
+	static int32 DisplayBackgroundIndex;
+	static bool  bShowLoadingScreen;
+	static bool  bLoadingScreenValid;
+
+	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
+	float GetFadeAnimationTime();
+	
+	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
+	void ShowLoadingScreen();
+
+	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
+	void HideLoadingScreen();
+	
+	void HideLoadingScreenInternal();
+
+	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
+	void SetAutoShowLoadingScreen(bool bShow);
+
+	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
+	void SetLoadingScreenBackgroundIndex(int Index);
+};

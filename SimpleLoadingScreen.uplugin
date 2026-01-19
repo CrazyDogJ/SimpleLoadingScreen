@@ -1,0 +1,31 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "SimpleLoadingScreen",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "CrazyDog",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "SimpleLoadingScreen",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"TargetDenyList": [
+				"Server"
+			]
+		},
+		{
+			"Name": "SimpleLoadingScreenEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
