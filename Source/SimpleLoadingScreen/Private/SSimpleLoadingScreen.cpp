@@ -6,6 +6,7 @@
 #include "SBackgroundWidget.h"
 #include "SimpleLoadingScreenSettings.h"
 #include "SimpleLoadingScreenSubsystem.h"
+#include "SLoadingImage.h"
 #include "SLoadingTextWidget.h"
 #include "Widgets/Images/SThrobber.h"
 
@@ -19,6 +20,15 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 	Settings = InSettings;
 	const FSimpleLoadingScreenBackground* BGSettingsPtr = &InSettings->BackgroundSettings;
 	const FSimpleLoadingScreenLoadingText* TextSettingsPtr = &InSettings->LoadingTextSettings;
+
+	if (InSettings->LoadingImage.ImageSequences.Num() > 0)
+	{
+		LoadingImageWidget = SNew(SLoadingImage, &InSettings->LoadingImage.ImageSequences[0]);
+	}
+	else
+	{
+		LoadingImageWidget = SNew(SThrobber);
+	}
 	
 	HorizontalBox =
 		SNew(SHorizontalBox)
@@ -38,7 +48,7 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 		.Expose(LoadingImageSlot)
 		.Padding(InSettings->LoadingImage.Padding)
 		[
-			SNew(SThrobber)
+			LoadingImageWidget.ToSharedRef()
 		];
 
 	FSlateBrush Brush;

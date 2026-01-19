@@ -94,6 +94,21 @@ struct FSimpleLoadingScreenLoadingText
 };
 
 USTRUCT(BlueprintType)
+struct FLoadingImageSequenceType
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Image Sequence")
+	TArray<TSoftObjectPtr<UTexture2D>> SequenceTextures;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Image Sequence")
+	float Period = 0.05f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen Loading Image")
+	float Scale = 1.0f;
+};
+
+USTRUCT(BlueprintType)
 struct FSimpleLoadingScreenLoadingImage
 {
 	GENERATED_BODY()
@@ -104,6 +119,9 @@ struct FSimpleLoadingScreenLoadingImage
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen Loading Image")
 	TEnumAsByte<EHorizontalAlignment> HorizontalAlignment = HAlign_Right;
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen Loading Image")
+	TArray<FLoadingImageSequenceType> ImageSequences;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Loading Screen Loading Image")
 	FMargin Padding = 10.0f;
 };

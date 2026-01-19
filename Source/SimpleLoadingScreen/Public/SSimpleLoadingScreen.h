@@ -30,6 +30,7 @@ private:
 	const USimpleLoadingScreenSettings* Settings = nullptr;
 	FCurveSequence FadeAnimationSequence;
 	TSharedPtr<SOverlay> Root;
+	TSharedPtr<SCompoundWidget> LoadingImageWidget;
 	TSharedPtr<SHorizontalBox> HorizontalBox;
 	TSharedPtr<SBorder> Border;
 	
