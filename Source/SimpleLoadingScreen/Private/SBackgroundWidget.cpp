@@ -21,7 +21,12 @@ void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoading
 		
 	}
 	const auto Images = Settings->BackgroundTextures;
-	const auto Index = IsMoviePlayerEnabled() ? USimpleLoadingScreenSubsystem::DisplayBackgroundIndex : Settings->BackgroundPreviewIndex;
+	const auto Index = IsMoviePlayerEnabled() ? USimpleLoadingScreenSubsystem::DisplayBackgroundIndex :
+#if WITH_EDITOR
+		Settings->BackgroundPreviewIndex;
+#else
+		0;
+#endif
 	if (Images.IsValidIndex(Index))
 	{
 		// Load background from settings
@@ -61,7 +66,12 @@ int32 SBackgroundWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allott
 	
 	const auto Images = Settings->BackgroundTextures;
 	// Load background from settings
-	const auto Index = IsMoviePlayerEnabled() ? USimpleLoadingScreenSubsystem::DisplayBackgroundIndex : Settings->BackgroundPreviewIndex;
+	const auto Index = IsMoviePlayerEnabled() ? USimpleLoadingScreenSubsystem::DisplayBackgroundIndex : 
+#if WITH_EDITOR
+		Settings->BackgroundPreviewIndex;
+#else
+		0;
+#endif
 	if (Images.IsValidIndex(Index))
 	{
 		// Load background from settings
