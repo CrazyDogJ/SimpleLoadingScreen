@@ -19,18 +19,21 @@ protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	void PreSetupLoadingScreen();
+	void MoviePlaybackFinished();
+	void PostLoadMapWithWorld(UWorld* World);
 	void SetupLoadingScreen(const FSimpleLoadingScreenAttributes& LoadingScreenSettings);
 
 public:
 	static int32 DisplayBackgroundIndex;
 	static bool  bShowLoadingScreen;
+	static bool  bAutoHideLoadingScreen;
 	static bool  bLoadingScreenValid;
 
 	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
 	float GetFadeAnimationTime();
 	
 	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
-	void ShowLoadingScreen();
+	void ShowLoadingScreen(bool InAutoHideLoadingScreen = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
 	void HideLoadingScreen();
