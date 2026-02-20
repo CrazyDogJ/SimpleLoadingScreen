@@ -27,7 +27,8 @@ public class SimpleLoadingScreen : ModuleRules
 			{
 				"Core", 
 				"MoviePlayer",
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"UMG",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -40,6 +41,7 @@ public class SimpleLoadingScreen : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UMG",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

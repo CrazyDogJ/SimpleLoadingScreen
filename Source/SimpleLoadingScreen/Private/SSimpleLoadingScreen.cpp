@@ -10,8 +10,10 @@
 #include "SLoadingTextWidget.h"
 #include "Widgets/Images/SThrobber.h"
 
-void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoadingScreenSettings* InSettings)
+void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoadingScreenSettings* InSettings, const USimpleLoadingScreenSubsystem* InLoadingScreenSubsystem)
 {
+	LoadingScreenSubsystem = InLoadingScreenSubsystem;
+	
 	if (!InSettings)
 	{
 		return;
@@ -69,7 +71,7 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
 		[
-			SNew(SBackgroundWidget, BGSettingsPtr)
+			SNew(SBackgroundWidget, BGSettingsPtr, LoadingScreenSubsystem)
 		]
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Fill)
@@ -84,7 +86,10 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 		Root.ToSharedRef()
 	];
 
-	if (InSettings->FadeInAnimationDuration > 0.0f && !USimpleLoadingScreenSubsystem::bLoadingScreenValid)
+	// Get subsystem loading screen valid.
+	const bool bLoadingScreenValid = LoadingScreenSubsystem ? LoadingScreenSubsystem->bLoadingScreenValid : true;
+	
+	if (InSettings->FadeInAnimationDuration > 0.0f && !bLoadingScreenValid)
 	{
 		bHasFade = true;
 		FadeAnimationSequence = FCurveSequence(0.f, InSettings->FadeInAnimationDuration);
@@ -124,6 +129,15 @@ int32 SSimpleLoadingScreen::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	if (bHasFade)
 	{
 		Root->SetRenderOpacity(FadeAnimationSequence.GetLerp());
+	}
+
+	// Remove when fade out. (usually avoid loading screen can't removed.)
+	if (LoadingScreenSubsystem && Root->GetRenderOpacity() <= 0)
+	{
+		if (LoadingScreenSubsystem->IsSlotValid())
+		{
+			GEngine->GameViewport->GetWindow()->RemoveOverlaySlot(LoadingScreenSubsystem->GetSlot().ToSharedRef());
+		}
 	}
 	
 	return SLoadingScreenLayout::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle,

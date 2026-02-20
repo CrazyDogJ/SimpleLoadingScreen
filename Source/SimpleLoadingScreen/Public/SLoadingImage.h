@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "SimpleLoadingScreenSettings.h"
+#include "Components/Widget.h"
 #include "Slate/DeferredCleanupSlateBrush.h"
 #include "UObject/Object.h"
+#include "SLoadingImage.generated.h"
 
 /**
  * Loading image slate.
@@ -39,4 +41,21 @@ protected:
 
 	//Time in second to update the images, the smaller value the faster of the animation. A zero value will update the images every frame.
 	float Interval = 0.05f;	
+};
+
+UCLASS(MinimalAPI)
+class ULoadingImage : public UWidget
+{
+	GENERATED_BODY()
+	
+public:
+	//~ Begin UVisual Interface
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	//~ End UVisual Interface
+private:
+	TSharedPtr<SLoadingImage> MyLoadingImage;
+protected:
+	//~ Begin UWidget Interface
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+	//~ End UWidget Interface
 };

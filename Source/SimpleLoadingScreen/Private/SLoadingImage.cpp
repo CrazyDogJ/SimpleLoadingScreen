@@ -13,6 +13,10 @@
 void SLoadingImage::Construct(const FArguments& InArgs, const FLoadingImageSequenceType* InSettings)
 {
 	Settings = InSettings;
+	if (Settings == nullptr)
+	{
+		return;
+	}
 	
 	// Loading Widget is image sequence
 	if (InSettings->SequenceTextures.Num() > 0)
@@ -94,4 +98,20 @@ int32 SLoadingImage::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	
 
 	return SCompoundWidget::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+}
+
+void ULoadingImage::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+
+	MyLoadingImage.Reset();
+}
+
+TSharedRef<SWidget> ULoadingImage::RebuildWidget()
+{
+	const auto Settings = GetDefault<USimpleLoadingScreenSettings>();
+	const auto* LoadingImageSetting = Settings->LoadingImage.ImageSequences.IsValidIndex(0) ? &Settings->LoadingImage.ImageSequences[0] : nullptr;
+	
+	MyLoadingImage = SNew(SLoadingImage, LoadingImageSetting);
+	return MyLoadingImage.ToSharedRef();
 }

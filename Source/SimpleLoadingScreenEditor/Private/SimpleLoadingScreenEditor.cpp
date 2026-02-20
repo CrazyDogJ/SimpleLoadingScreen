@@ -70,7 +70,7 @@ TSharedRef<SDockTab> FSimpleLoadingScreenEditorModule::OnSpawnLoadingScreenTab(c
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			SNew(SSimpleLoadingScreen, Settings)
+			SNew(SSimpleLoadingScreen, Settings, nullptr)
 		];
 }
 

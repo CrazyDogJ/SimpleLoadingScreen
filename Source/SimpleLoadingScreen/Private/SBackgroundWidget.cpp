@@ -6,8 +6,10 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Engine/Texture2D.h"
 
-void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoadingScreenBackground* InSettings)
+void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoadingScreenBackground* InSettings, const USimpleLoadingScreenSubsystem* InLoadingScreenSubsystem)
 {
+	LoadingScreenSubsystem = InLoadingScreenSubsystem;
+	
 	if (!InSettings)
 	{
 		return;
@@ -15,13 +17,9 @@ void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoading
 	
 	Settings = InSettings;
 	
-	// Setup default transparent texture;
-	if (IsMoviePlayerEnabled())
-	{
-		
-	}
 	const auto Images = Settings->BackgroundTextures;
-	const auto Index = IsMoviePlayerEnabled() ? USimpleLoadingScreenSubsystem::DisplayBackgroundIndex :
+	const int32 SubsystemIndex = LoadingScreenSubsystem ? LoadingScreenSubsystem->DisplayBackgroundIndex : 0;
+	const auto Index = IsMoviePlayerEnabled() ? SubsystemIndex :
 #if WITH_EDITOR
 		Settings->BackgroundPreviewIndex;
 #else
@@ -66,7 +64,8 @@ int32 SBackgroundWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allott
 	
 	const auto Images = Settings->BackgroundTextures;
 	// Load background from settings
-	const auto Index = IsMoviePlayerEnabled() ? USimpleLoadingScreenSubsystem::DisplayBackgroundIndex : 
+	const int32 SubsystemIndex = LoadingScreenSubsystem ? LoadingScreenSubsystem->DisplayBackgroundIndex : 0;
+	const auto Index = IsMoviePlayerEnabled() ? SubsystemIndex : 
 #if WITH_EDITOR
 		Settings->BackgroundPreviewIndex;
 #else

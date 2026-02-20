@@ -4,6 +4,7 @@
 
 #include "SLoadingScreenLayout.h"
 
+class USimpleLoadingScreenSubsystem;
 class SLoadingTextWidget;
 class USimpleLoadingScreenSettings;
 
@@ -20,7 +21,7 @@ public:
 	/**
 	 * Construct this widget
 	 */
-	void Construct(const FArguments& InArgs, const USimpleLoadingScreenSettings* InSettings);
+	void Construct(const FArguments& InArgs, const USimpleLoadingScreenSettings* InSettings, const USimpleLoadingScreenSubsystem* InLoadingScreenSubsystem);
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;	
 
@@ -33,6 +34,8 @@ private:
 	TSharedPtr<SCompoundWidget> LoadingImageWidget;
 	TSharedPtr<SHorizontalBox> HorizontalBox;
 	TSharedPtr<SBorder> Border;
+
+	const USimpleLoadingScreenSubsystem* LoadingScreenSubsystem = nullptr;
 	
 	SHorizontalBox::FSlot* TextSlot = nullptr;
 	SHorizontalBox::FSlot* LoadingImageSlot = nullptr;

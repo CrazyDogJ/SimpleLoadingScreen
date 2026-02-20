@@ -137,6 +137,9 @@ class SIMPLELOADINGSCREEN_API USimpleLoadingScreenSettings : public UDeveloperSe
 public:
 	virtual FName GetCategoryName() const override;
 
+	UPROPERTY(Config, EditAnywhere, Category = "UMG")
+	TSubclassOf<UUserWidget> LoadingScreenUserWidget;
+	
 	UPROPERTY(Config, EditAnywhere, Category = "General")
 	FSimpleLoadingScreenAttributes LoadingScreenAttributes;
 

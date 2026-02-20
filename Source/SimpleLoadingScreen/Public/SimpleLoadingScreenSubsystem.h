@@ -16,6 +16,10 @@ class SIMPLELOADINGSCREEN_API USimpleLoadingScreenSubsystem : public UGameInstan
 protected:
 	TSharedPtr<SDPIScaler> Slot;
 	TSharedPtr<SSimpleLoadingScreen> LoadingScreen;
+
+	UPROPERTY()
+	UUserWidget* CachedLoadingScreenUserWidget;
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	void PreSetupLoadingScreen();
@@ -24,10 +28,20 @@ protected:
 	void SetupLoadingScreen(const FSimpleLoadingScreenAttributes& LoadingScreenSettings);
 
 public:
-	static int32 DisplayBackgroundIndex;
-	static bool  bShowLoadingScreen;
-	static bool  bAutoHideLoadingScreen;
-	static bool  bLoadingScreenValid;
+	bool IsSlotValid() const { return Slot.IsValid(); }
+	TSharedPtr<SDPIScaler> GetSlot() const { return Slot; }
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int32 DisplayBackgroundIndex = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bShowLoadingScreen = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bAutoHideLoadingScreen = true;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	bool bLoadingScreenValid = false;
 
 	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
 	float GetFadeAnimationTime();
@@ -39,10 +53,4 @@ public:
 	void HideLoadingScreen();
 	
 	void HideLoadingScreenInternal();
-
-	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
-	void SetAutoShowLoadingScreen(bool bShow);
-
-	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
-	void SetLoadingScreenBackgroundIndex(int Index);
 };
