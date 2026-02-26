@@ -5,16 +5,17 @@
 
 #include "SimpleLoadingScreenSettings.h"
 #include "Blueprint/UserWidget.h"
-#include "Slate/SObjectWidget.h"
 #include "Widgets/Layout/SDPIScaler.h"
 
 void USimpleLoadingScreenSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	
 	bShowLoadingScreen = true;
 
-	const USimpleLoadingScreenSettings* Settings = GetDefault<USimpleLoadingScreenSettings>();
-	CachedLoadingScreenUserWidget = CreateWidget(GetWorld(), Settings->LoadingScreenUserWidget);
+	CreateUserWidget();
+	MakeScriptSlate();
+	MakeLoadingScreenHolder();
 	
 	if (!IsRunningDedicatedServer() && FSlateApplication::IsInitialized())
 	{
@@ -37,6 +38,12 @@ void USimpleLoadingScreenSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
 
+	// Try clearing.
+	LoadingScreenHolder.Reset();
+	UserWidget->ReleaseSlateResources(true);
+	UserWidget->ConditionalBeginDestroy();
+	UserWidget = nullptr;
+	
 	if (!IsRunningDedicatedServer())
 	{
 		if (IsMoviePlayerEnabled())
@@ -50,6 +57,35 @@ void USimpleLoadingScreenSubsystem::Deinitialize()
 			FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 		}
 	}
+}
+
+void USimpleLoadingScreenSubsystem::MakeLoadingScreenHolder()
+{
+	LoadingScreenHolder = SNew(SDPIScaler).DPIScale(1.0);
+	
+	if (UserWidget)
+	{
+		LoadingScreenHolder->SetContent(UserWidget->TakeWidget());
+	}
+	else if (LoadingScreen)
+	{
+		LoadingScreenHolder->SetContent(LoadingScreen.ToSharedRef());
+	}
+}
+
+void USimpleLoadingScreenSubsystem::MakeScriptSlate()
+{
+	const USimpleLoadingScreenSettings* Settings = GetDefault<USimpleLoadingScreenSettings>();
+	if (!UserWidget)
+	{
+		LoadingScreen = SNew(SSimpleLoadingScreen, Settings, this);
+	}
+}
+
+void USimpleLoadingScreenSubsystem::CreateUserWidget()
+{
+	const USimpleLoadingScreenSettings* Settings = GetDefault<USimpleLoadingScreenSettings>();
+	UserWidget = CreateWidget(GetGameInstance(), Settings->LoadingScreenUserWidget);
 }
 
 void USimpleLoadingScreenSubsystem::PreSetupLoadingScreen()
@@ -86,11 +122,10 @@ void USimpleLoadingScreenSubsystem::SetupLoadingScreen(const FSimpleLoadingScree
 	LoadingScreenAttributes.MoviePaths = LoadingScreenSettings.MoviePaths;
 	LoadingScreenAttributes.PlaybackType = LoadingScreenSettings.PlaybackType;
 	const auto Settings = GetDefault<USimpleLoadingScreenSettings>();
-	if (CachedLoadingScreenUserWidget)
+	// Set up loading screen widget.
+	if (UserWidget)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Try adding loading screen user widget."))
-		LoadingScreenAttributes.WidgetLoadingScreen = CachedLoadingScreenUserWidget->TakeWidget();
-		//LoadingScreenAttributes.WidgetLoadingScreen = SNew(SObjectWidget, CachedLoadingScreenUserWidget);
+		LoadingScreenAttributes.WidgetLoadingScreen = UserWidget->TakeWidget();
 	}
 	else if (LoadingScreen)
 	{
@@ -114,43 +149,9 @@ void USimpleLoadingScreenSubsystem::ShowLoadingScreen(const bool InAutoHideLoadi
 {
 	bAutoHideLoadingScreen = InAutoHideLoadingScreen;
 	
-	if (GEngine && GEngine->GameViewport && !bLoadingScreenValid)
+	if (!bLoadingScreenValid)
 	{
-		if (CachedLoadingScreenUserWidget)
-		{
-			Slot =
-				SNew(SDPIScaler).DPIScale(1.0)
-				[
-					SNew(SBorder)
-					.BorderImage(FCoreStyle::Get().GetBrush(TEXT("NoBorder")))
-					.Padding(0)
-					[
-						CachedLoadingScreenUserWidget->TakeWidget()
-					]
-				];
-		}
-		else
-		{
-			const auto Settings = GetDefault<USimpleLoadingScreenSettings>();
-			LoadingScreen = SNew(SSimpleLoadingScreen, Settings, this);
-			// Setup pre-loading screen will override the pre-loading screen effect. Fixing pre-loading screen problem
-			PreSetupLoadingScreen();
-			Slot =
-				SNew(SDPIScaler).DPIScale(1.0)
-				[
-					SNew(SBorder)
-					.BorderImage(FCoreStyle::Get().GetBrush(TEXT("NoBorder")))
-					.Padding(0)
-					[
-						LoadingScreen.ToSharedRef()
-					]
-				];
-		}
-		
-		GEngine->GameViewport->GetWindow()->AddOverlaySlot()
-		[
-			Slot.ToSharedRef()
-		];
+		GetGameInstance()->GetGameViewportClient()->GetWindow()->AddOverlaySlot()[LoadingScreenHolder.ToSharedRef()];
 		
 		bLoadingScreenValid = true;
 	}
@@ -158,9 +159,10 @@ void USimpleLoadingScreenSubsystem::ShowLoadingScreen(const bool InAutoHideLoadi
 
 void USimpleLoadingScreenSubsystem::HideLoadingScreen()
 {
-	if (GEngine && GEngine->GameViewport && bLoadingScreenValid)
+	if (bLoadingScreenValid)
 	{
-		if (CachedLoadingScreenUserWidget)
+		// Do not use custom logic if UserWidgetSlate is valid.
+		if (UserWidget)
 		{
 			HideLoadingScreenInternal();
 		}
@@ -185,12 +187,10 @@ void USimpleLoadingScreenSubsystem::HideLoadingScreen()
 void USimpleLoadingScreenSubsystem::HideLoadingScreenInternal()
 {
 	// Final stand for removing loading screen.
-	if (Slot.IsValid())
+	if (LoadingScreenHolder.IsValid())
 	{
-		GEngine->GameViewport->GetWindow()->RemoveOverlaySlot(Slot.ToSharedRef());
+		GetGameInstance()->GetGameViewportClient()->GetWindow()->RemoveOverlaySlot(LoadingScreenHolder.ToSharedRef());
 	}
 	
-	Slot = nullptr;
-	LoadingScreen = nullptr;
 	bLoadingScreenValid = false;
 }

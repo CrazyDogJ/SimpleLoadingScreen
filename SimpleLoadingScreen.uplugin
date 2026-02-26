@@ -17,7 +17,7 @@
 		{
 			"Name": "SimpleLoadingScreen",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
+			"LoadingPhase": "PostConfigInit",
 			"TargetDenyList": [
 				"Server"
 			]
@@ -25,7 +25,7 @@
 		{
 			"Name": "SimpleLoadingScreenEditor",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostEngineInit"
 		}
 	]
 }

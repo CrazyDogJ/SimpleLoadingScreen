@@ -14,22 +14,28 @@ class SIMPLELOADINGSCREEN_API USimpleLoadingScreenSubsystem : public UGameInstan
 	GENERATED_BODY()
 
 protected:
-	TSharedPtr<SDPIScaler> Slot;
-	TSharedPtr<SSimpleLoadingScreen> LoadingScreen;
+	TSharedPtr<SDPIScaler> LoadingScreenHolder;
 
 	UPROPERTY()
-	UUserWidget* CachedLoadingScreenUserWidget;
+	UUserWidget* UserWidget;
+	
+	TSharedPtr<SSimpleLoadingScreen> LoadingScreen;
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
+
+	void MakeLoadingScreenHolder();
+	void MakeScriptSlate();
+	void CreateUserWidget();
+	
 	void PreSetupLoadingScreen();
 	void MoviePlaybackFinished();
 	void PostLoadMapWithWorld(UWorld* World);
 	void SetupLoadingScreen(const FSimpleLoadingScreenAttributes& LoadingScreenSettings);
 
 public:
-	bool IsSlotValid() const { return Slot.IsValid(); }
-	TSharedPtr<SDPIScaler> GetSlot() const { return Slot; }
+	bool IsSlotValid() const { return LoadingScreenHolder.IsValid(); }
+	TSharedPtr<SDPIScaler> GetSlot() const { return LoadingScreenHolder; }
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 DisplayBackgroundIndex = 0;
