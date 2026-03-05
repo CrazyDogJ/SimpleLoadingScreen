@@ -144,6 +144,11 @@ int32 SSimpleLoadingScreen::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	                                     bParentEnabled);
 }
 
+void SSimpleLoadingScreen::FadeIn()
+{
+	FadeAnimationSequence.Play(AsShared(), false, 0.f, false);
+}
+
 void SSimpleLoadingScreen::FadeOut()
 {
 	if (!Settings)

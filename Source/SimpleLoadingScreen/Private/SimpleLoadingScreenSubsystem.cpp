@@ -40,9 +40,12 @@ void USimpleLoadingScreenSubsystem::Deinitialize()
 
 	// Try clearing.
 	LoadingScreenHolder.Reset();
-	UserWidget->ReleaseSlateResources(true);
-	UserWidget->ConditionalBeginDestroy();
-	UserWidget = nullptr;
+	if (UserWidget)
+	{
+		UserWidget->ReleaseSlateResources(true);
+		UserWidget->ConditionalBeginDestroy();
+		UserWidget = nullptr;
+	}
 	
 	if (!IsRunningDedicatedServer())
 	{
@@ -85,7 +88,10 @@ void USimpleLoadingScreenSubsystem::MakeScriptSlate()
 void USimpleLoadingScreenSubsystem::CreateUserWidget()
 {
 	const USimpleLoadingScreenSettings* Settings = GetDefault<USimpleLoadingScreenSettings>();
-	UserWidget = CreateWidget(GetGameInstance(), Settings->LoadingScreenUserWidget);
+	if (Settings->LoadingScreenUserWidget)
+	{
+		UserWidget = CreateWidget(GetGameInstance(), Settings->LoadingScreenUserWidget);
+	}
 }
 
 void USimpleLoadingScreenSubsystem::PreSetupLoadingScreen()
@@ -152,8 +158,8 @@ void USimpleLoadingScreenSubsystem::ShowLoadingScreen(const bool InAutoHideLoadi
 	if (!bLoadingScreenValid)
 	{
 		GetGameInstance()->GetGameViewportClient()->GetWindow()->AddOverlaySlot()[LoadingScreenHolder.ToSharedRef()];
-		
 		bLoadingScreenValid = true;
+		LoadingScreen.ToSharedRef()->FadeIn();
 	}
 }
 
