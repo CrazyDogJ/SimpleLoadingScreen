@@ -157,7 +157,12 @@ void USimpleLoadingScreenSubsystem::ShowLoadingScreen(const bool InAutoHideLoadi
 	
 	if (!bLoadingScreenValid)
 	{
-		GetGameInstance()->GetGameViewportClient()->GetWindow()->AddOverlaySlot()[LoadingScreenHolder.ToSharedRef()];
+		Window = GetGameInstance()->GetGameViewportClient()->GetWindow();
+		if (Window)
+		{
+			Window->AddOverlaySlot()[LoadingScreenHolder.ToSharedRef()];
+		}
+		
 		bLoadingScreenValid = true;
 		LoadingScreen.ToSharedRef()->FadeIn();
 	}
@@ -190,12 +195,20 @@ void USimpleLoadingScreenSubsystem::HideLoadingScreen()
 	}
 }
 
+void USimpleLoadingScreenSubsystem::RemoveLoadingScreen()
+{
+	HideLoadingScreenInternal();
+}
+
 void USimpleLoadingScreenSubsystem::HideLoadingScreenInternal()
 {
 	// Final stand for removing loading screen.
 	if (LoadingScreenHolder.IsValid())
 	{
-		GetGameInstance()->GetGameViewportClient()->GetWindow()->RemoveOverlaySlot(LoadingScreenHolder.ToSharedRef());
+		if (Window)
+		{
+			Window->RemoveOverlaySlot(LoadingScreenHolder.ToSharedRef());
+		}
 	}
 	
 	bLoadingScreenValid = false;

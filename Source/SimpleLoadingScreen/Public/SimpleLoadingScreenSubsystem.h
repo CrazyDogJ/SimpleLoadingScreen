@@ -14,6 +14,8 @@ class SIMPLELOADINGSCREEN_API USimpleLoadingScreenSubsystem : public UGameInstan
 	GENERATED_BODY()
 
 protected:
+	TSharedPtr<SWindow> Window;
+	
 	TSharedPtr<SDPIScaler> LoadingScreenHolder;
 
 	UPROPERTY()
@@ -57,6 +59,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
 	void HideLoadingScreen();
+
+	UFUNCTION(BlueprintCallable, Category = "Simple Loading Screen")
+	void RemoveLoadingScreen();
 	
 	void HideLoadingScreenInternal();
 };
