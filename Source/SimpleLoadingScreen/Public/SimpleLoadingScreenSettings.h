@@ -156,6 +156,6 @@ public:
 	float FadeInAnimationDuration = 1.0f;
 
 	UPROPERTY(Config, EditAnywhere, Category = "General")
-	FLinearColor BorderColor = FLinearColor(0, 0, 0, 0.2);
+	FLinearColor BorderColor = FLinearColor(0, 0, 0, 0.2f);
 
 };
