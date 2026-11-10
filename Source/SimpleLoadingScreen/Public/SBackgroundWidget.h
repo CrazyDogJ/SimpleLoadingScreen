@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Widgets/SCompoundWidget.h"
+#include "UObject/SoftObjectPath.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 
 class USimpleLoadingScreenSubsystem;
 struct FSimpleLoadingScreenBackground;
@@ -29,7 +31,9 @@ private:
 	TSharedRef<SWidget> ScalarBox = SNullWidget::NullWidget;
 	TSharedRef<SWidget> Border = SNullWidget::NullWidget;
 
-	const USimpleLoadingScreenSubsystem* LoadingScreenSubsystem = nullptr;
+	// 修复：电影播放器可能比游戏实例持有界面更久。
+	TWeakObjectPtr<const USimpleLoadingScreenSubsystem> LoadingScreenSubsystem;
+	mutable FSoftObjectPath CachedImagePath;
 	
 	const FSimpleLoadingScreenBackground* Settings = nullptr;
 	

@@ -24,7 +24,7 @@ public:
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
 protected:
-	const FLoadingImageSequenceType* Settings = nullptr;
+	// 修复：不跨帧保存设置数组中元素的地址，编辑器可随时调整数组。
 	// Placeholder widgets
 	TSharedRef<SWidget> LoadingIcon = SNullWidget::NullWidget;
 	// Image slate brush list

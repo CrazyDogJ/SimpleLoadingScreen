@@ -13,6 +13,8 @@ void USimpleLoadingScreenSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	
 	bShowLoadingScreen = true;
 
+	// 修复：专用服务器和无 Slate 环境不能构造加载控件。
+	if (IsRunningDedicatedServer() || !FSlateApplication::IsInitialized()) return;
 	CreateUserWidget();
 	MakeScriptSlate();
 	MakeLoadingScreenHolder();
@@ -36,30 +38,18 @@ void USimpleLoadingScreenSubsystem::Initialize(FSubsystemCollectionBase& Collect
 
 void USimpleLoadingScreenSubsystem::Deinitialize()
 {
-	Super::Deinitialize();
-
-	// Try clearing.
+	// 修复：先撤销全局事件、定时器和窗口覆盖层，再让 GC 管理 UMG 控件。
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+	if (!IsRunningDedicatedServer() && IsMoviePlayerEnabled() && GetMoviePlayer())
+	{
+		GetMoviePlayer()->OnPrepareLoadingScreen().RemoveAll(this);
+		GetMoviePlayer()->OnMoviePlaybackFinished().RemoveAll(this);
+	}
+	HideLoadingScreenInternal();
 	LoadingScreenHolder.Reset();
-	if (UserWidget)
-	{
-		UserWidget->ReleaseSlateResources(true);
-		UserWidget->ConditionalBeginDestroy();
-		UserWidget = nullptr;
-	}
-	
-	if (!IsRunningDedicatedServer())
-	{
-		if (IsMoviePlayerEnabled())
-		{
-			GetMoviePlayer()->OnPrepareLoadingScreen().RemoveAll(this);
-			GetMoviePlayer()->OnMoviePlaybackFinished().RemoveAll(this);
-		}
-		else
-		{
-			// If in pie, we usually use post load map to auto hide the loading screen.
-			FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
-		}
-	}
+	LoadingScreen.Reset();
+	UserWidget = nullptr;
+	Super::Deinitialize();
 }
 
 void USimpleLoadingScreenSubsystem::MakeLoadingScreenHolder()
@@ -113,7 +103,8 @@ void USimpleLoadingScreenSubsystem::MoviePlaybackFinished()
 
 void USimpleLoadingScreenSubsystem::PostLoadMapWithWorld(UWorld* World)
 {
-	MoviePlaybackFinished();
+	// 修复：只响应本游戏实例加载完成的世界。
+	if (World && World->GetGameInstance() == GetGameInstance()) MoviePlaybackFinished();
 }
 
 void USimpleLoadingScreenSubsystem::SetupLoadingScreen(const FSimpleLoadingScreenAttributes& LoadingScreenSettings)
@@ -155,17 +146,24 @@ void USimpleLoadingScreenSubsystem::ShowLoadingScreen(const bool InAutoHideLoadi
 {
 	bAutoHideLoadingScreen = InAutoHideLoadingScreen;
 	
+	// 修复：自定义 UMG 路径没有默认 Slate 动画，窗口建立前也不能登记覆盖层。
+	if (!LoadingScreenHolder.IsValid() || !GetGameInstance()) return;
+	auto& Timers = GetGameInstance()->GetTimerManager();
+	const bool bWasHiding = Timers.IsTimerActive(HideTimer);
+	Timers.ClearTimer(HideTimer);
 	if (!bLoadingScreenValid)
 	{
-		Window = GetGameInstance()->GetGameViewportClient()->GetWindow();
-		if (Window)
-		{
-			Window->AddOverlaySlot()[LoadingScreenHolder.ToSharedRef()];
-		}
-		
+		const auto Viewport = GetGameInstance()->GetGameViewportClient();
+		Window = Viewport ? Viewport->GetWindow() : nullptr;
+		if (!Window.IsValid()) return;
+		Window->AddOverlaySlot()[LoadingScreenHolder.ToSharedRef()];
 		bLoadingScreenValid = true;
-		LoadingScreen.ToSharedRef()->FadeIn();
 	}
+	else if (!bWasHiding)
+	{
+		return;
+	}
+	if (LoadingScreen.IsValid()) LoadingScreen->FadeIn();
 }
 
 void USimpleLoadingScreenSubsystem::HideLoadingScreen()
@@ -183,8 +181,7 @@ void USimpleLoadingScreenSubsystem::HideLoadingScreen()
 			if (Settings->FadeInAnimationDuration > 0.0f && LoadingScreen)
 			{
 				LoadingScreen->FadeOut();
-				FTimerHandle DelayHandle;
-				GetWorld()->GetTimerManager().SetTimer(DelayHandle, this, &ThisClass::HideLoadingScreenInternal,
+				GetGameInstance()->GetTimerManager().SetTimer(HideTimer, this, &ThisClass::HideLoadingScreenInternal,
 					Settings->FadeInAnimationDuration, false);
 			}
 			else
@@ -202,6 +199,7 @@ void USimpleLoadingScreenSubsystem::RemoveLoadingScreen()
 
 void USimpleLoadingScreenSubsystem::HideLoadingScreenInternal()
 {
+	if (GetGameInstance()) GetGameInstance()->GetTimerManager().ClearTimer(HideTimer);
 	// Final stand for removing loading screen.
 	if (LoadingScreenHolder.IsValid())
 	{
@@ -211,5 +209,6 @@ void USimpleLoadingScreenSubsystem::HideLoadingScreenInternal()
 		}
 	}
 	
+	Window.Reset();
 	bLoadingScreenValid = false;
 }

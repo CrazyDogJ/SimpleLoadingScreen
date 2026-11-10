@@ -55,7 +55,8 @@ void FSimpleLoadingScreenEditorModule::UnregisterMenuExtensions()
 {
 	if (UToolMenus* ToolMenus = UToolMenus::Get())
 	{
-		ToolMenus->RemoveSection("LevelEditor.MainMenu.Window", "OpenSimpleLoadingScreenPreviewWindow");
+		// 修复：移除实际登记的条目，避免菜单继续调用已卸载模块。
+		ToolMenus->RemoveEntry("LevelEditor.MainMenu.Window", "WindowLayout", "OpenSimpleLoadingScreenPreviewWindow");
 	}
 }
 

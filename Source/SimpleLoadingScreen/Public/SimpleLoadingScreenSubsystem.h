@@ -14,6 +14,8 @@ class SIMPLELOADINGSCREEN_API USimpleLoadingScreenSubsystem : public UGameInstan
 	GENERATED_BODY()
 
 protected:
+	// 修复：明确持有淡出定时器，以便重新显示或退出时撤销。
+	FTimerHandle HideTimer;
 	TSharedPtr<SWindow> Window;
 	
 	TSharedPtr<SDPIScaler> LoadingScreenHolder;

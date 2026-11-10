@@ -28,6 +28,8 @@ public:
 	void FadeIn();
 	void FadeOut();
 private:
+	// 修复：SBorder 保存画刷指针，画刷必须与控件同寿命。
+	mutable FSlateBrush BorderBrush;
 	bool bHasFade = false;
 	const USimpleLoadingScreenSettings* Settings = nullptr;
 	FCurveSequence FadeAnimationSequence;
@@ -36,7 +38,6 @@ private:
 	TSharedPtr<SHorizontalBox> HorizontalBox;
 	TSharedPtr<SBorder> Border;
 
-	const USimpleLoadingScreenSubsystem* LoadingScreenSubsystem = nullptr;
 	
 	SHorizontalBox::FSlot* TextSlot = nullptr;
 	SHorizontalBox::FSlot* LoadingImageSlot = nullptr;

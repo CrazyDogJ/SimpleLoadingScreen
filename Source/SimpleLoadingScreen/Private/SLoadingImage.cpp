@@ -12,8 +12,7 @@
 
 void SLoadingImage::Construct(const FArguments& InArgs, const FLoadingImageSequenceType* InSettings)
 {
-	Settings = InSettings;
-	if (Settings == nullptr)
+	if (!InSettings)
 	{
 		return;
 	}
@@ -27,18 +26,21 @@ void SLoadingImage::Construct(const FArguments& InArgs, const FLoadingImageSeque
 		for (auto Image : InSettings->SequenceTextures)
 		{
 			const auto LoadedImage = Image.LoadSynchronous();
+			// 修复：丢失的软引用不参与动画，尺寸通过纹理接口取得。
+			if (!LoadedImage) continue;
 #if ENGINE_MAJOR_VERSION == 4
 			CleanupBrushList.Add(FDeferredCleanupSlateBrush::CreateBrush(LoadedImage,
-				FVector2D(Image->PlatformData->SizeX * InSettings->Scale, Image->PlatformData->SizeY * InSettings->Scale)
+				FVector2D(LoadedImage->GetSizeX() * InSettings->Scale, LoadedImage->GetSizeY() * InSettings->Scale)
 				));
 #else
 			CleanupBrushList.Add(FDeferredCleanupSlateBrush::CreateBrush(LoadedImage,
-				FVector2f(Image->GetPlatformData()->SizeX * InSettings->Scale, Image->GetPlatformData()->SizeY * InSettings->Scale)
+				FVector2f(LoadedImage->GetSizeX() * InSettings->Scale, LoadedImage->GetSizeY() * InSettings->Scale)
 				));
 #endif
 		}
 		
 		// Create Image slate widget
+		if (CleanupBrushList.Num() == 0) return;
 		LoadingIcon = SNew(SImage)
 			.Image(CleanupBrushList[ImageIndex]->GetSlateBrush());
 
@@ -62,12 +64,8 @@ int32 SLoadingImage::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	bool bParentEnabled) const
 {
 	TotalDeltaTime += Args.GetDeltaTime();
-	if (!Settings)
-	{
-		return SCompoundWidget::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
-	}
 	
-	if (TotalDeltaTime >= Settings->Period)
+	if (TotalDeltaTime >= Interval)
 	{
 		if (CleanupBrushList.Num() > 1)
 		{

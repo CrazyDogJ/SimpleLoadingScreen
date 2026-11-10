@@ -12,7 +12,6 @@
 
 void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoadingScreenSettings* InSettings, const USimpleLoadingScreenSubsystem* InLoadingScreenSubsystem)
 {
-	LoadingScreenSubsystem = InLoadingScreenSubsystem;
 	
 	if (!InSettings)
 	{
@@ -53,14 +52,13 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 			LoadingImageWidget.ToSharedRef()
 		];
 
-	FSlateBrush Brush;
-	Brush.TintColor = InSettings->BorderColor;
+	BorderBrush.TintColor = InSettings->BorderColor;
 	
 	Border =
 		SNew(SBorder)
 		.VAlign(TextSettingsPtr->VerticalAlignment)
 		.HAlign(TextSettingsPtr->HorizontalAlignment)
-		.BorderImage(&Brush)
+		.BorderImage(&BorderBrush)
 		[
 			HorizontalBox.ToSharedRef()
 		];
@@ -71,7 +69,7 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
 		[
-			SNew(SBackgroundWidget, BGSettingsPtr, LoadingScreenSubsystem)
+			SNew(SBackgroundWidget, BGSettingsPtr, InLoadingScreenSubsystem)
 		]
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Fill)
@@ -87,7 +85,7 @@ void SSimpleLoadingScreen::Construct(const FArguments& InArgs, const USimpleLoad
 	];
 
 	// Get subsystem loading screen valid.
-	const bool bLoadingScreenValid = LoadingScreenSubsystem ? LoadingScreenSubsystem->bLoadingScreenValid : true;
+	const bool bLoadingScreenValid = InLoadingScreenSubsystem ? InLoadingScreenSubsystem->bLoadingScreenValid : true;
 	
 	if (InSettings->FadeInAnimationDuration > 0.0f && !bLoadingScreenValid)
 	{
@@ -101,6 +99,7 @@ int32 SSimpleLoadingScreen::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId,
 	const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	if (!Settings || !Border) return LayerId;
 	Border->SetVAlign(Settings->LoadingTextSettings.VerticalAlignment);
 	Border->SetHAlign(Settings->LoadingTextSettings.HorizontalAlignment);
 
@@ -122,23 +121,15 @@ int32 SSimpleLoadingScreen::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	LoadingImageSlot->SetHorizontalAlignment(Settings->LoadingImage.HorizontalAlignment);
 #endif
 	
-	FSlateBrush Brush;
-	Brush.TintColor = Settings->BorderColor;
-	Border->SetBorderImage(&Brush);
+	BorderBrush.TintColor = Settings->BorderColor;
+	Border->SetBorderImage(&BorderBrush);
 	
 	if (bHasFade)
 	{
 		Root->SetRenderOpacity(FadeAnimationSequence.GetLerp());
 	}
 
-	// Remove when fade out. (usually avoid loading screen can't removed.)
-	if (LoadingScreenSubsystem && Root->GetRenderOpacity() <= 0)
-	{
-		if (LoadingScreenSubsystem->IsSlotValid())
-		{
-			GEngine->GameViewport->GetWindow()->RemoveOverlaySlot(LoadingScreenSubsystem->GetSlot().ToSharedRef());
-		}
-	}
+	// 修复：窗口覆盖层由子系统定时移除，绘制期间不修改 Slate 树或访问全局视口。
 	
 	return SLoadingScreenLayout::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle,
 	                                     bParentEnabled);

@@ -18,7 +18,7 @@ void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoading
 	Settings = InSettings;
 	
 	const auto Images = Settings->BackgroundTextures;
-	const int32 SubsystemIndex = LoadingScreenSubsystem ? LoadingScreenSubsystem->DisplayBackgroundIndex : 0;
+	const int32 SubsystemIndex = LoadingScreenSubsystem.IsValid() ? LoadingScreenSubsystem->DisplayBackgroundIndex : 0;
 	const auto Index = IsMoviePlayerEnabled() ? SubsystemIndex :
 #if WITH_EDITOR
 		Settings->BackgroundPreviewIndex;
@@ -30,6 +30,7 @@ void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoading
 		// Load background from settings
 		if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Images[Index].ToString()))
 		{
+			CachedImagePath = Images[Index];
 			ImageBrush = FDeferredCleanupSlateBrush::CreateBrush(Texture);
 		}
 	}
@@ -55,7 +56,8 @@ void SBackgroundWidget::Construct(const FArguments& InArgs, const FSimpleLoading
 
 int32 SBackgroundWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	if (!Settings)
+	// 修复：电影播放器可在非游戏线程绘制，只在游戏线程访问资源及切换画刷。
+	if (!IsInGameThread() || !Settings)
 		return SCompoundWidget::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	StaticCastSharedRef<SScaleBox>(ScalarBox)->SetStretch(Settings->ImageStretch);
@@ -64,18 +66,19 @@ int32 SBackgroundWidget::OnPaint(const FPaintArgs& Args, const FGeometry& Allott
 	
 	const auto Images = Settings->BackgroundTextures;
 	// Load background from settings
-	const int32 SubsystemIndex = LoadingScreenSubsystem ? LoadingScreenSubsystem->DisplayBackgroundIndex : 0;
+	const int32 SubsystemIndex = LoadingScreenSubsystem.IsValid() ? LoadingScreenSubsystem->DisplayBackgroundIndex : 0;
 	const auto Index = IsMoviePlayerEnabled() ? SubsystemIndex : 
 #if WITH_EDITOR
 		Settings->BackgroundPreviewIndex;
 #else
 		0;
 #endif
-	if (Images.IsValidIndex(Index))
+	if (Images.IsValidIndex(Index) && CachedImagePath != Images[Index])
 	{
 		// Load background from settings
 		if (UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Images[Index].ToString()))
 		{
+			CachedImagePath = Images[Index];
 			ImageBrush = FDeferredCleanupSlateBrush::CreateBrush(Texture);
 			StaticCastSharedRef<SImage>(BackgroundWidget)->SetImage(ImageBrush.IsValid() ? ImageBrush->GetSlateBrush() : nullptr);
 		}
